@@ -1,15 +1,33 @@
-import numpy as np
 import cv2
-from matplotlib import pyplot as plt
-img = cv2.imread(r'C33P1thinF_IMG_20150619_114756a_cell_181.png')
-b,g,r = cv2.split(img)
-rgb_img = cv2.merge([r,g,b])
-gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-ret, thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-plt.subplot(211),plt.imshow(closing, 'gray')
-plt.title("morphologyEx:Closing:2x2"), plt.xticks([]), plt.yticks([])
-plt.subplot(212),plt.imshow(sure_bg, 'gray')
-plt.imsave(r'dilation.png',sure_bg)
-plt.title("Dilation"), plt.xticks([]), plt.yticks([])
-plt.tight_layout()
-plt.show()
+import numpy as np
+
+# Load an image
+image = cv2.imread(r'C:\Users\HP\OneDrive\Pictures\WhatsApp Image 2023-10-16 at 8.26.58 AM.jpeg')
+
+# Convert the image to grayscale
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# Apply noise removal (you can use other filters as needed)
+denoised = cv2.medianBlur(gray, 5)
+
+# Apply thresholding
+ret, thresh = cv2.threshold(denoised, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+# Sure background area
+sure_bg = cv2.dilate(thresh, None, iterations=3)
+
+# Marker labelling
+_, markers = cv2.connectedComponents(sure_bg)
+
+# Apply watershed algorithm
+markers = markers + 1
+markers[thresh == 255] = 0
+markers = cv2.watershed(image, markers)
+
+# Draw contours on the original image
+image[markers == -1] = [0, 0, 255]  # Mark watershed boundaries
+
+# Display the result
+cv2.imshow('Segmented Image', image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
