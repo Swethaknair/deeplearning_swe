@@ -1,19 +1,46 @@
+import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, classification_report
-texts = ["I love programming", "Machine learning is fascinating", "Python is a versatile language",
-         "I dislike bugs in my code", "Data science is the future", "Programming is fun"]
+from sklearn.datasets import load_iris
 
-labels = ["positive", "positive", "positive", "negative", "positive", "positive"]
-X_train, X_test, y_train, y_test = train_test_split(texts, labels, test_size=0.2, random_state=42)
-vectorizer = CountVectorizer()
-X_train_vectorized = vectorizer.fit_transform(X_train)
-X_test_vectorized = vectorizer.transform(X_test)
-naive_bayes_classifier = MultinomialNB()
-naive_bayes_classifier.fit(X_train_vectorized, y_train)
-predictions = naive_bayes_classifier.predict(X_test_vectorized)
-accuracy = accuracy_score(y_test, predictions)
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
 
-print(f"Accuracy: {accuracy}")
+def logistic_regression(X, theta):
+    return sigmoid(np.dot(X, theta))
 
+# Load the Iris dataset
+iris = load_iris()
+X = iris.data
+y = (iris.target == 0).astype(int)  # Convert to binary classification (0 or 1)
+
+# Add a bias term to the feature matrix
+X = np.c_[np.ones(X.shape[0]), X]
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize parameters
+theta = np.zeros(X_train.shape[1])
+
+# Set learning rate and number of iterations
+learning_rate = 0.01
+num_iterations = 1000
+
+# Gradient Descent
+for _ in range(num_iterations):
+    predictions = logistic_regression(X_train, theta)
+    errors = predictions - y_train
+    gradient = np.dot(X_train.T, errors) / len(y_train)
+    theta -= learning_rate * gradient
+
+# Make predictions on the test data
+test_predictions = (logistic_regression(X_test, theta) >= 0.5).astype(int)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, test_predictions)
+print("Accuracy:", accuracy)
+
+# Print classification report for detailed metrics
+print("Classification Report:")
+print(classification_report(y_test, test_predictions))
